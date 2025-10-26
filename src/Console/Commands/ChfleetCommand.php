@@ -10,18 +10,23 @@ use NetServa\Fleet\Models\FleetVNode;
 use NetServa\Fleet\Models\FleetVSite;
 
 /**
- * Fleet Import Command
+ * Change/Update Fleet Command (NetServa 3.0 CRUD: UPDATE)
  *
- * Imports infrastructure from var/ directory structure and SSH hosts
+ * ⚠️  DEPRECATED: This command is for legacy var/ directory migration only.
+ * NetServa 3.0 uses database-first architecture - no var/ directory needed.
+ *
+ * For normal operations, use:
+ * - addfleet <vnode>  : Discover and register infrastructure via SSH
+ * - addvenue/addvsite/addvnode : Create infrastructure manually
  */
-class FleetImportCommand extends Command
+class ChfleetCommand extends Command
 {
-    protected $signature = 'fleet:import
-                          {--dry-run : Show what would be imported without making changes}
-                          {--force : Overwrite existing data}
-                          {--vnode= : Import only specific vnode}';
+    protected $signature = 'chfleet
+                          {vnode? : Sync specific vnode only (optional)}
+                          {--dry-run : Show what would be synced without making changes}
+                          {--force : Overwrite existing data}';
 
-    protected $description = 'Import infrastructure from var/ directory and SSH hosts';
+    protected $description = '[DEPRECATED] Legacy var/ directory migration tool (use addfleet instead)';
 
     protected array $vnodeToVsiteMap;
 
@@ -31,17 +36,27 @@ class FleetImportCommand extends Command
 
     public function handle(): int
     {
+        // Display deprecation warning
+        $this->warn('⚠️  DEPRECATED: This command is for legacy var/ directory migration only.');
+        $this->warn('NetServa 3.0 uses database-first architecture - no ~/.ns/var directory needed.');
+        $this->newLine();
+        $this->line('For normal operations, use:');
+        $this->line('  • addfleet <vnode>     : Discover infrastructure via SSH');
+        $this->line('  • addvenue/addvsite/addvnode : Create infrastructure manually');
+        $this->newLine();
+
         $this->dryRun = $this->option('dry-run');
         $this->force = $this->option('force');
         $this->vnodeToVsiteMap = config('fleet.vsites.vnode_to_vsite_mappings', []);
+        $specificVnode = $this->argument('vnode');
 
-        $this->info('🚀 Starting NetServa Fleet Import');
+        $this->info('🔄 Starting Legacy Fleet Sync from var/ directory');
 
         if ($this->dryRun) {
             $this->warn('📋 DRY RUN MODE - No changes will be made');
         }
 
-        // Import infrastructure hierarchy
+        // Sync infrastructure hierarchy
         $stats = [
             'vsites' => 0,
             'vnodes' => 0,
@@ -57,7 +72,7 @@ class FleetImportCommand extends Command
 
             return 0;
         } catch (\Exception $e) {
-            $this->error("Import failed: {$e->getMessage()}");
+            $this->error("Sync failed: {$e->getMessage()}");
 
             return 1;
         }
@@ -72,13 +87,22 @@ class FleetImportCommand extends Command
         $varBase = str_replace('~', env('HOME'), $varBase);
 
         if (! is_dir($varBase)) {
-            throw new \Exception("Var directory not found: {$varBase}");
+            $this->error("Var directory not found: {$varBase}");
+            $this->newLine();
+            $this->warn('NetServa 3.0 does NOT use the var/ directory structure.');
+            $this->line('This command is only for migrating from NetServa 2.x legacy installations.');
+            $this->newLine();
+            $this->line('To set up your fleet in NetServa 3.0:');
+            $this->line('  1. Create SSH hosts:    addssh <host> <hostname>');
+            $this->line('  2. Discover infrastructure: addfleet <vnode>');
+            $this->line('  3. Or create manually:  addvenue → addvsite → addvnode');
+            throw new \Exception("Legacy var/ directory not found: {$varBase}");
         }
 
-        $this->info("📁 Scanning var directory: {$varBase}");
+        $this->info("📁 Scanning legacy var directory: {$varBase}");
 
         $vsiteDirs = glob("{$varBase}/*", GLOB_ONLYDIR);
-        $specificVnode = $this->option('vnode');
+        $specificVnode = $this->argument('vnode');
 
         foreach ($vsiteDirs as $vsiteDir) {
             $vsiteName = basename($vsiteDir);

@@ -7,14 +7,15 @@ use NetServa\Fleet\Models\FleetVNode;
 use NetServa\Fleet\Services\FleetDiscoveryService;
 
 /**
- * Fleet Discovery Command
+ * Add Fleet Command (NetServa 3.0 CRUD: CREATE)
  *
- * Triggers SSH-based discovery of fleet infrastructure
+ * Discovers and registers fleet infrastructure via SSH
  */
-class FleetDiscoverCommand extends Command
+class AddfleetCommand extends Command
 {
-    protected $signature = 'fleet:discover
-                          {--vnode= : Discover specific vnode only}
+    protected $signature = 'addfleet
+                          {vnode? : Discover specific vnode only (optional - discovers all if omitted)}
+                          {--all : Discover all vnodes (same as omitting vnode argument)}
                           {--force : Force discovery even if not scheduled}
                           {--test-ssh : Test SSH connections only}
                           {--import-legacy : Import existing NetServa 1.0 vhosts from /srv/}
@@ -23,7 +24,7 @@ class FleetDiscoverCommand extends Command
                           {--force-no-dns : Emergency override - skip DNS validation (disables email)}
                           {--verify-dns-only : Only verify DNS without making changes}';
 
-    protected $description = 'Discover fleet infrastructure via SSH';
+    protected $description = 'Add/discover fleet infrastructure via SSH (NetServa 3.0 CRUD: Create)';
 
     protected FleetDiscoveryService $discoveryService;
 
@@ -41,14 +42,16 @@ class FleetDiscoverCommand extends Command
             return $this->testSshConnections();
         }
 
-        $specificVnode = $this->option('vnode');
+        $specificVnode = $this->argument('vnode');
+        $discoverAll = $this->option('all');
         $force = $this->option('force');
 
         try {
-            if ($specificVnode) {
-                return $this->discoverSpecificVNode($specificVnode, $force);
-            } else {
+            // --all flag overrides positional vnode argument
+            if ($discoverAll || ! $specificVnode) {
                 return $this->discoverAll($force);
+            } else {
+                return $this->discoverSpecificVNode($specificVnode, $force);
             }
         } catch (\Exception $e) {
             $this->error("Discovery failed: {$e->getMessage()}");
@@ -154,7 +157,7 @@ class FleetDiscoverCommand extends Command
                 $result = $importService->discoverLegacyVhosts($vnode);
 
                 if ($result['success']) {
-                    $this->info("✅ Legacy import complete:");
+                    $this->info('✅ Legacy import complete:');
                     $this->line("   • Discovered: {$result['discovered']} vhosts");
                     $this->line("   • Imported: {$result['imported']} vhosts");
 
@@ -257,8 +260,8 @@ class FleetDiscoverCommand extends Command
             ['IP Address', $vnode->ip_address ?? 'Unknown'],
             ['OS', $vnode->operating_system ?? 'Unknown'],
             ['CPU Cores', $vnode->cpu_cores ?? 'Unknown'],
-            ['Memory (MB)', $vnode->memory_mb ?? 'Unknown'],
-            ['Disk (GB)', $vnode->disk_gb ?? 'Unknown'],
+            ['Memory', $vnode->memory_mb ? $vnode->memory_mb.' MB' : 'Unknown'],
+            ['Disk', $vnode->disk_gb ? $vnode->disk_gb.' GB' : 'Unknown'],
             ['Status', ucfirst($vnode->status)],
             ['Last Discovery', $vnode->last_discovered_at?->format('Y-m-d H:i:s') ?? 'Never'],
             ['Next Scan', $vnode->next_scan_at?->format('Y-m-d H:i:s') ?? 'Not scheduled'],
