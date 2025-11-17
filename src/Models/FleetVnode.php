@@ -10,23 +10,23 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use NetServa\Core\Models\SshHost;
 use NetServa\Dns\Models\DnsProvider;
-use NetServa\Fleet\Database\Factories\FleetVNodeFactory;
+use NetServa\Fleet\Database\Factories\FleetVnodeFactory;
 
 /**
  * Fleet VNode Model
  *
  * Represents servers in the VSite->VNode->VHost hierarchy
  */
-class FleetVNode extends Model
+class FleetVnode extends Model
 {
     use HasFactory, SoftDeletes;
 
     /**
      * Create a new factory instance for the model.
      */
-    protected static function newFactory(): FleetVNodeFactory
+    protected static function newFactory(): FleetVnodeFactory
     {
-        return FleetVNodeFactory::new();
+        return FleetVnodeFactory::new();
     }
 
     protected $table = 'fleet_vnodes';
@@ -38,6 +38,7 @@ class FleetVNode extends Model
         'vsite_id',
         'ssh_host_id',
         'dns_provider_id',
+        'palette_id',
         'database_type',
         'mail_db_path',
         'role',
@@ -104,7 +105,7 @@ class FleetVNode extends Model
      */
     public function vsite(): BelongsTo
     {
-        return $this->belongsTo(FleetVSite::class, 'vsite_id');
+        return $this->belongsTo(FleetVsite::class, 'vsite_id');
     }
 
     /**
@@ -116,11 +117,19 @@ class FleetVNode extends Model
     }
 
     /**
+     * Get the palette for this vnode
+     */
+    public function palette(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Palette::class);
+    }
+
+    /**
      * Get vhosts running on this vnode
      */
     public function vhosts(): HasMany
     {
-        return $this->hasMany(FleetVHost::class, 'vnode_id');
+        return $this->hasMany(FleetVhost::class, 'vnode_id');
     }
 
     /**

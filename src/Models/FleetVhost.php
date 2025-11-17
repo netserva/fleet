@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use NetServa\Cli\Models\VConf;
 use NetServa\Dns\Models\DnsProvider;
-use NetServa\Fleet\Database\Factories\FleetVHostFactory;
+use NetServa\Fleet\Database\Factories\FleetVhostFactory;
 
 /**
  * Fleet VHost Model
@@ -19,16 +19,16 @@ use NetServa\Fleet\Database\Factories\FleetVHostFactory;
  * Represents VM/CT instances in the VSite->VNode->VHost hierarchy
  * In NetServa context, vhost = complete VM/CT instance, not just web vhost
  */
-class FleetVHost extends Model
+class FleetVhost extends Model
 {
     use HasFactory, SoftDeletes;
 
     /**
      * Create a new factory instance for the model.
      */
-    protected static function newFactory(): FleetVHostFactory
+    protected static function newFactory(): FleetVhostFactory
     {
-        return FleetVHostFactory::new();
+        return FleetVhostFactory::new();
     }
 
     protected $table = 'fleet_vhosts';
@@ -38,6 +38,7 @@ class FleetVHost extends Model
         'slug',
         'vnode_id',
         'dns_provider_id',
+        'palette_id',
         'instance_type',
         'instance_id',
         'cpu_cores',
@@ -102,7 +103,7 @@ class FleetVHost extends Model
      */
     public function vnode(): BelongsTo
     {
-        return $this->belongsTo(FleetVNode::class, 'vnode_id');
+        return $this->belongsTo(FleetVnode::class, 'vnode_id');
     }
 
     /**
@@ -110,7 +111,7 @@ class FleetVHost extends Model
      */
     public function vsite()
     {
-        return $this->hasOneThrough(FleetVSite::class, FleetVNode::class, 'id', 'id', 'vnode_id', 'vsite_id');
+        return $this->hasOneThrough(FleetVsite::class, FleetVnode::class, 'id', 'id', 'vnode_id', 'vsite_id');
     }
 
     /**
@@ -131,6 +132,14 @@ class FleetVHost extends Model
     public function dnsProvider(): BelongsTo
     {
         return $this->belongsTo(DnsProvider::class, 'dns_provider_id');
+    }
+
+    /**
+     * Get the palette for this vhost
+     */
+    public function palette(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Palette::class);
     }
 
     /**

@@ -8,23 +8,23 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 use NetServa\Dns\Models\DnsProvider;
-use NetServa\Fleet\Database\Factories\FleetVSiteFactory;
+use NetServa\Fleet\Database\Factories\FleetVsiteFactory;
 
 /**
- * Fleet VSite Model
+ * Fleet Vsite Model
  *
- * Represents hosting providers/locations in the VSite->VNode->VHost hierarchy
+ * Represents hosting providers/locations in the Vsite->Vnode->Vhost hierarchy
  */
-class FleetVSite extends Model
+class FleetVsite extends Model
 {
     use HasFactory;
 
     /**
      * Create a new factory instance for the model.
      */
-    protected static function newFactory(): FleetVSiteFactory
+    protected static function newFactory(): FleetVsiteFactory
     {
-        return FleetVSiteFactory::new();
+        return FleetVsiteFactory::new();
     }
 
     protected $table = 'fleet_vsites';
@@ -37,6 +37,7 @@ class FleetVSite extends Model
         'technology',
         'location',
         'dns_provider_id',
+        'palette_id',
         'api_endpoint',
         'api_credentials',
         'capabilities',
@@ -80,7 +81,7 @@ class FleetVSite extends Model
      */
     public function vnodes(): HasMany
     {
-        return $this->hasMany(FleetVNode::class, 'vsite_id');
+        return $this->hasMany(FleetVnode::class, 'vsite_id');
     }
 
     /**
@@ -88,7 +89,7 @@ class FleetVSite extends Model
      */
     public function vhosts()
     {
-        return $this->hasManyThrough(FleetVHost::class, FleetVNode::class, 'vsite_id', 'vnode_id');
+        return $this->hasManyThrough(FleetVhost::class, FleetVnode::class, 'vsite_id', 'vnode_id');
     }
 
     /**
@@ -97,6 +98,14 @@ class FleetVSite extends Model
     public function dnsProvider(): BelongsTo
     {
         return $this->belongsTo(DnsProvider::class, 'dns_provider_id');
+    }
+
+    /**
+     * Get the palette for this vsite
+     */
+    public function palette(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Palette::class);
     }
 
     /**

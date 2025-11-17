@@ -17,8 +17,8 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
-use NetServa\Fleet\Filament\Resources\FleetVNodeResource\Pages;
-use NetServa\Fleet\Models\FleetVNode;
+use NetServa\Fleet\Filament\Resources\FleetVnodeResource\Pages;
+use NetServa\Fleet\Models\FleetVnode;
 use NetServa\Fleet\Services\FleetDiscoveryService;
 
 /**
@@ -26,9 +26,9 @@ use NetServa\Fleet\Services\FleetDiscoveryService;
  *
  * Manages servers in the fleet hierarchy
  */
-class FleetVNodeResource extends Resource
+class FleetVnodeResource extends Resource
 {
-    protected static ?string $model = FleetVNode::class;
+    protected static ?string $model = FleetVnode::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-server';
 
@@ -216,13 +216,13 @@ class FleetVNodeResource extends Resource
 
                 Tables\Columns\TextColumn::make('vhost_count')
                     ->label('VHosts')
-                    ->getStateUsing(fn (FleetVNode $record) => $record->vhosts()->count())
+                    ->getStateUsing(fn (FleetVnode $record) => $record->vhosts()->count())
                     ->alignCenter()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('system_summary')
                     ->label('System')
-                    ->getStateUsing(function (FleetVNode $record): string {
+                    ->getStateUsing(function (FleetVnode $record): string {
                         $parts = [];
                         if ($record->cpu_cores) {
                             $parts[] = "{$record->cpu_cores}C";
@@ -237,7 +237,7 @@ class FleetVNodeResource extends Resource
 
                 Tables\Columns\TextColumn::make('discovery_status')
                     ->label('Discovery')
-                    ->getStateUsing(fn (FleetVNode $record) => $record->getLastDiscoveryStatus())
+                    ->getStateUsing(fn (FleetVnode $record) => $record->getLastDiscoveryStatus())
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'success' => 'success',
@@ -304,7 +304,7 @@ class FleetVNodeResource extends Resource
                 Action::make('discover')
                     ->icon('heroicon-o-magnifying-glass')
                     ->color('info')
-                    ->action(function (FleetVNode $record) {
+                    ->action(function (FleetVnode $record) {
                         $discoveryService = app(FleetDiscoveryService::class);
                         $success = $discoveryService->discoverVNode($record);
 
@@ -328,7 +328,7 @@ class FleetVNodeResource extends Resource
                 Action::make('test_ssh')
                     ->icon('heroicon-o-signal')
                     ->color('warning')
-                    ->action(function (FleetVNode $record) {
+                    ->action(function (FleetVnode $record) {
                         $discoveryService = app(FleetDiscoveryService::class);
                         $result = $discoveryService->testSshConnection($record);
 
@@ -388,7 +388,7 @@ class FleetVNodeResource extends Resource
     {
         return $schema
             ->schema([
-                Infolists\Components\Section::make('VNode Information')
+                Section::make('VNode Information')
                     ->schema([
                         Infolists\Components\TextEntry::make('name')
                             ->weight('bold'),
@@ -404,7 +404,7 @@ class FleetVNodeResource extends Resource
                     ])
                     ->columns(3),
 
-                Infolists\Components\Section::make('Classification')
+                Section::make('Classification')
                     ->schema([
                         Infolists\Components\TextEntry::make('role')
                             ->badge(),
@@ -417,7 +417,7 @@ class FleetVNodeResource extends Resource
                     ])
                     ->columns(3),
 
-                Infolists\Components\Section::make('System Information')
+                Section::make('System Information')
                     ->schema([
                         Infolists\Components\TextEntry::make('ip_address'),
 
@@ -436,7 +436,7 @@ class FleetVNodeResource extends Resource
                     ])
                     ->columns(3),
 
-                Infolists\Components\Section::make('Discovery Status')
+                Section::make('Discovery Status')
                     ->schema([
                         Infolists\Components\TextEntry::make('last_discovered_at')
                             ->dateTime(),
@@ -457,10 +457,8 @@ class FleetVNodeResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListFleetVNodes::route('/'),
-            'create' => Pages\CreateFleetVNode::route('/create'),
-            'view' => Pages\ViewFleetVNode::route('/{record}'),
-            'edit' => Pages\EditFleetVNode::route('/{record}/edit'),
+            'index' => Pages\ManageFleetVnodes::route('/'),
+            'view' => Pages\ViewFleetVnode::route('/{record}'),
         ];
     }
 

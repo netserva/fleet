@@ -5,14 +5,14 @@ namespace NetServa\Fleet\Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 use NetServa\Fleet\Models\FleetVenue;
-use NetServa\Fleet\Models\FleetVSite;
+use NetServa\Fleet\Models\FleetVsite;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\NetServa\Fleet\Models\FleetVSite>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\NetServa\Fleet\Models\FleetVsite>
  */
-class FleetVSiteFactory extends Factory
+class FleetVsiteFactory extends Factory
 {
-    protected $model = FleetVSite::class;
+    protected $model = FleetVsite::class;
 
     public function definition(): array
     {

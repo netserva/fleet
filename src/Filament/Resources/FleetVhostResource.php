@@ -16,17 +16,17 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
-use NetServa\Fleet\Filament\Resources\FleetVHostResource\Pages;
-use NetServa\Fleet\Models\FleetVHost;
+use NetServa\Fleet\Filament\Resources\FleetVhostResource\Pages;
+use NetServa\Fleet\Models\FleetVhost;
 
 /**
  * Fleet VHost Resource
  *
  * Manages VM/CT instances in the fleet hierarchy
  */
-class FleetVHostResource extends Resource
+class FleetVhostResource extends Resource
 {
-    protected static ?string $model = FleetVHost::class;
+    protected static ?string $model = FleetVhost::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-computer-desktop';
 
@@ -150,7 +150,7 @@ class FleetVHostResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('instance_icon')
                     ->label('')
-                    ->getStateUsing(fn (FleetVHost $record) => $record->getInstanceTypeIcon())
+                    ->getStateUsing(fn (FleetVhost $record) => $record->getInstanceTypeIcon())
                     ->alignCenter()
                     ->size('sm'),
 
@@ -185,13 +185,13 @@ class FleetVHostResource extends Resource
 
                 Tables\Columns\TextColumn::make('primary_ip')
                     ->label('Primary IP')
-                    ->getStateUsing(fn (FleetVHost $record) => $record->primary_ip)
+                    ->getStateUsing(fn (FleetVhost $record) => $record->primary_ip)
                     ->searchable()
                     ->toggleable(),
 
                 Tables\Columns\TextColumn::make('resource_summary')
                     ->label('Resources')
-                    ->getStateUsing(function (FleetVHost $record): string {
+                    ->getStateUsing(function (FleetVhost $record): string {
                         $parts = [];
                         if ($record->cpu_cores) {
                             $parts[] = "{$record->cpu_cores}C";
@@ -209,7 +209,7 @@ class FleetVHostResource extends Resource
 
                 Tables\Columns\TextColumn::make('service_types')
                     ->label('Services')
-                    ->getStateUsing(function (FleetVHost $record): string {
+                    ->getStateUsing(function (FleetVhost $record): string {
                         $types = [];
                         if ($record->isWebServer()) {
                             $types[] = 'Web';
@@ -282,15 +282,15 @@ class FleetVHostResource extends Resource
                     ->label('Validation')
                     ->icon('heroicon-o-clipboard-document-check')
                     ->color('warning')
-                    ->url(fn (FleetVHost $record): string => static::getUrl('view-validation', ['record' => $record]))
-                    ->visible(fn (FleetVHost $record) => in_array($record->migration_status, ['discovered', 'validated', 'failed'])),
+                    ->url(fn (FleetVhost $record): string => static::getUrl('view-validation', ['record' => $record]))
+                    ->visible(fn (FleetVhost $record) => in_array($record->migration_status, ['discovered', 'validated', 'failed'])),
 
                 Action::make('view_migration_log')
                     ->label('Migration Log')
                     ->icon('heroicon-o-document-text')
                     ->color('info')
-                    ->url(fn (FleetVHost $record): string => static::getUrl('view-migration-log', ['record' => $record]))
-                    ->visible(fn (FleetVHost $record) => in_array($record->migration_status, ['migrated', 'failed'])),
+                    ->url(fn (FleetVhost $record): string => static::getUrl('view-migration-log', ['record' => $record]))
+                    ->visible(fn (FleetVhost $record) => in_array($record->migration_status, ['migrated', 'failed'])),
 
                 Action::make('rollback')
                     ->label('Rollback')
@@ -298,8 +298,8 @@ class FleetVHostResource extends Resource
                     ->color('warning')
                     ->requiresConfirmation()
                     ->modalHeading('Rollback Migration')
-                    ->modalDescription(fn (FleetVHost $record): string => "This will restore {$record->domain} to its pre-migration state. The vhost will be marked as 'validated' after rollback.")
-                    ->form(function (FleetVHost $record) {
+                    ->modalDescription(fn (FleetVhost $record): string => "This will restore {$record->domain} to its pre-migration state. The vhost will be marked as 'validated' after rollback.")
+                    ->form(function (FleetVhost $record) {
                         $migrationService = app(\NetServa\Cli\Services\MigrationExecutionService::class);
                         $result = $migrationService->listRollbackPoints($record);
 
@@ -319,7 +319,7 @@ class FleetVHostResource extends Resource
                                 ->default(fn () => array_key_first($options)), // Default to most recent
                         ];
                     })
-                    ->action(function (FleetVHost $record, array $data) {
+                    ->action(function (FleetVhost $record, array $data) {
                         $migrationService = app(\NetServa\Cli\Services\MigrationExecutionService::class);
                         $result = $migrationService->rollbackVhost($record, $data['archive']);
 
@@ -337,12 +337,12 @@ class FleetVHostResource extends Resource
                                 ->send();
                         }
                     })
-                    ->visible(fn (FleetVHost $record) => $record->migration_status === 'migrated' && $record->rollback_available),
+                    ->visible(fn (FleetVhost $record) => $record->migration_status === 'migrated' && $record->rollback_available),
 
                 Action::make('sync_var_file')
                     ->icon('heroicon-o-arrow-path')
                     ->color('info')
-                    ->action(function (FleetVHost $record) {
+                    ->action(function (FleetVhost $record) {
                         $synced = $record->syncWithVarFile();
 
                         if ($synced) {
@@ -359,7 +359,7 @@ class FleetVHostResource extends Resource
                                 ->send();
                         }
                     })
-                    ->visible(fn (FleetVHost $record) => ! empty($record->var_file_path)),
+                    ->visible(fn (FleetVhost $record) => ! empty($record->var_file_path)),
 
                 ViewAction::make(),
                 EditAction::make(),
@@ -434,7 +434,7 @@ class FleetVHostResource extends Resource
     {
         return $schema
             ->schema([
-                Infolists\Components\Section::make('VHost Information')
+                Section::make('VHost Information')
                     ->schema([
                         Infolists\Components\TextEntry::make('domain')
                             ->weight('bold'),
@@ -450,7 +450,7 @@ class FleetVHostResource extends Resource
                     ])
                     ->columns(3),
 
-                Infolists\Components\Section::make('Instance Details')
+                Section::make('Instance Details')
                     ->schema([
                         Infolists\Components\TextEntry::make('instance_type')
                             ->badge(),
@@ -468,7 +468,7 @@ class FleetVHostResource extends Resource
                     ])
                     ->columns(3),
 
-                Infolists\Components\Section::make('Network & Services')
+                Section::make('Network & Services')
                     ->schema([
                         Infolists\Components\TextEntry::make('ip_addresses')
                             ->listWithLineBreaks()
@@ -480,7 +480,7 @@ class FleetVHostResource extends Resource
                     ])
                     ->columns(2),
 
-                Infolists\Components\Section::make('NetServa Integration')
+                Section::make('NetServa Integration')
                     ->schema([
                         Infolists\Components\TextEntry::make('var_file_path')
                             ->copyable(),
@@ -490,7 +490,7 @@ class FleetVHostResource extends Resource
 
                         Infolists\Components\TextEntry::make('netserva_paths')
                             ->label('NetServa Paths')
-                            ->getStateUsing(function (FleetVHost $record): array {
+                            ->getStateUsing(function (FleetVhost $record): array {
                                 $paths = $record->getNetServasPaths();
 
                                 return [
@@ -506,7 +506,7 @@ class FleetVHostResource extends Resource
                     ])
                     ->columns(2),
 
-                Infolists\Components\Section::make('Discovery Status')
+                Section::make('Discovery Status')
                     ->schema([
                         Infolists\Components\TextEntry::make('last_discovered_at')
                             ->dateTime(),
@@ -524,13 +524,11 @@ class FleetVHostResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListFleetVHosts::route('/'),
-            'create' => Pages\CreateFleetVHost::route('/create'),
-            'view' => Pages\ViewFleetVHost::route('/{record}'),
+            'index' => Pages\ManageFleetVhosts::route('/'),
+            'view' => Pages\ViewFleetVhost::route('/{record}'),
             // Temporarily disabled - needs Filament 4.1 compatibility fixes
             // 'view-validation' => Pages\ViewValidation::route('/{record}/validation'),
             // 'view-migration-log' => Pages\ViewMigrationLog::route('/{record}/migration-log'),
-            'edit' => Pages\EditFleetVHost::route('/{record}/edit'),
         ];
     }
 

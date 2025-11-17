@@ -4,15 +4,15 @@ namespace NetServa\Fleet\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
-use NetServa\Fleet\Models\FleetVNode;
-use NetServa\Fleet\Models\FleetVSite;
+use NetServa\Fleet\Models\FleetVnode;
+use NetServa\Fleet\Models\FleetVsite;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\NetServa\Fleet\Models\FleetVNode>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\NetServa\Fleet\Models\FleetVnode>
  */
-class FleetVNodeFactory extends Factory
+class FleetVnodeFactory extends Factory
 {
-    protected $model = FleetVNode::class;
+    protected $model = FleetVnode::class;
 
     public function definition(): array
     {
@@ -23,7 +23,7 @@ class FleetVNodeFactory extends Factory
             'name' => $name,
             'slug' => Str::slug($name),
             'fqdn' => $fqdn,
-            'vsite_id' => FleetVSite::factory(),
+            'vsite_id' => FleetVsite::factory(),
             'role' => fake()->randomElement(['compute', 'storage', 'database', 'web']),
             'environment' => fake()->randomElement(['production', 'staging', 'development']),
             'ip_address' => fake()->ipv4(),

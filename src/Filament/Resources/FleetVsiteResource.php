@@ -14,17 +14,17 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
-use NetServa\Fleet\Filament\Resources\FleetVSiteResource\Pages;
-use NetServa\Fleet\Models\FleetVSite;
+use NetServa\Fleet\Filament\Resources\FleetVsiteResource\Pages;
+use NetServa\Fleet\Models\FleetVsite;
 
 /**
  * Fleet VSite Resource
  *
  * Manages hosting providers/locations in the fleet hierarchy
  */
-class FleetVSiteResource extends Resource
+class FleetVsiteResource extends Resource
 {
-    protected static ?string $model = FleetVSite::class;
+    protected static ?string $model = FleetVsite::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-building-office';
 
@@ -130,7 +130,7 @@ class FleetVSiteResource extends Resource
 
                 Tables\Columns\TextColumn::make('provider_tech')
                     ->label('Provider/Tech')
-                    ->getStateUsing(fn (FleetVSite $record) => $record->getProviderTech())
+                    ->getStateUsing(fn (FleetVsite $record) => $record->getProviderTech())
                     ->badge()
                     ->color(fn (string $state): string => match (true) {
                         str_contains($state, 'Local') => 'success',
@@ -144,13 +144,13 @@ class FleetVSiteResource extends Resource
 
                 Tables\Columns\TextColumn::make('node_count')
                     ->label('Nodes')
-                    ->getStateUsing(fn (FleetVSite $record) => $record->vnodes()->count())
+                    ->getStateUsing(fn (FleetVsite $record) => $record->vnodes()->count())
                     ->alignCenter()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('vhost_count')
                     ->label('VHosts')
-                    ->getStateUsing(fn (FleetVSite $record) => $record->vhosts()->count())
+                    ->getStateUsing(fn (FleetVsite $record) => $record->vhosts()->count())
                     ->alignCenter()
                     ->sortable(),
 
@@ -214,7 +214,7 @@ class FleetVSiteResource extends Resource
     {
         return $schema
             ->schema([
-                Infolists\Components\Section::make('VSite Information')
+                Section::make('VSite Information')
                     ->schema([
                         Infolists\Components\TextEntry::make('name')
                             ->weight('bold'),
@@ -226,7 +226,7 @@ class FleetVSiteResource extends Resource
                     ])
                     ->columns(2),
 
-                Infolists\Components\Section::make('Provider Details')
+                Section::make('Provider Details')
                     ->schema([
                         Infolists\Components\TextEntry::make('provider')
                             ->badge()
@@ -239,26 +239,26 @@ class FleetVSiteResource extends Resource
                         Infolists\Components\TextEntry::make('location'),
 
                         Infolists\Components\TextEntry::make('api_endpoint')
-                            ->url(),
+                            ->url(fn (?string $state): ?string => $state),
                     ])
                     ->columns(2),
 
-                Infolists\Components\Section::make('Capabilities')
+                Section::make('Capabilities')
                     ->schema([
                         Infolists\Components\TextEntry::make('capabilities')
                             ->listWithLineBreaks()
                             ->bulleted(),
                     ]),
 
-                Infolists\Components\Section::make('Statistics')
+                Section::make('Statistics')
                     ->schema([
                         Infolists\Components\TextEntry::make('node_count')
                             ->label('VNodes')
-                            ->getStateUsing(fn (FleetVSite $record) => $record->vnodes()->count()),
+                            ->getStateUsing(fn (FleetVsite $record) => $record->vnodes()->count()),
 
                         Infolists\Components\TextEntry::make('vhost_count')
                             ->label('VHosts')
-                            ->getStateUsing(fn (FleetVSite $record) => $record->vhosts()->count()),
+                            ->getStateUsing(fn (FleetVsite $record) => $record->vhosts()->count()),
 
                         Infolists\Components\TextEntry::make('status')
                             ->badge()
@@ -274,7 +274,7 @@ class FleetVSiteResource extends Resource
                     ])
                     ->columns(4),
 
-                Infolists\Components\Section::make('Timestamps')
+                Section::make('Timestamps')
                     ->schema([
                         Infolists\Components\TextEntry::make('created_at')
                             ->dateTime(),
@@ -289,10 +289,8 @@ class FleetVSiteResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListFleetVSites::route('/'),
-            'create' => Pages\CreateFleetVSite::route('/create'),
-            'view' => Pages\ViewFleetVSite::route('/{record}'),
-            'edit' => Pages\EditFleetVSite::route('/{record}/edit'),
+            'index' => Pages\ManageFleetVsites::route('/'),
+            'view' => Pages\ViewFleetVsite::route('/{record}'),
         ];
     }
 
